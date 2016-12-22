@@ -1,0 +1,17 @@
+Main Problem : 
+	1. Find a trip which has shortest travelling time between places based on optimum time to visit the places.
+
+Additional constraints : 
+	* CN tower opens from 8am to 8pm but optimum time to visit the place is 6pm to 9pm. So if optimum time fail i.e if there is another place with higher priority has optimum time from 6pm and 9pm then the algo should put CN tower in opening hours. 
+	* Higher priority places should get first consideration
+	
+
+What we have : 
+	1. List of places (200)
+	2. Opening hours of places
+	3. Optimum time to visit the places 
+	4. Time to spend in each places 
+	5. Priority for each place ( 1 - 5 (5 bring highest))
+
+What we don't have : 
+	1. Distance between each places. ( We can query google but need to come up smart way to do that / max 20 query per sec  )

@@ -1,0 +1,231 @@
+<div class="container-fluid home">
+	<div class="main">
+		<h1>
+			<small>Travel planning can be simple</small>
+			<br>
+			We've got plans for you!
+		</h1>
+
+		<br>
+
+		<div class="row">
+			<div class="col-md-8 col-md-offset-2 col-xs-10 col-xs-offset-1">
+				<form ng-submit="search()" ng-init="days=2;lifestyle='s'">
+					<div class="row">
+						<div class="col-md-10">
+							<input class="form-control input-lg typeahd" type="text" name="place" ng-model="place" placeholder="Your destination city e.g. New York City">
+						</div>
+						<div class="col-md-2">
+							<button class="btn btn-lg go-btn" type="submit">
+								<i class="fa fa-paper-plane"></i>
+								GO
+							</button>
+						</div>
+					</div>
+
+					<br>
+
+					<div class="row hidden-xs">
+						<div class="col-md-4">
+							<label>Date</label>
+						</div>
+						<div class="col-md-4">
+							<label>Days</label>
+						</div>
+						<div class="col-md-4">
+							<label>Interest</label>
+						</div>
+					</div>
+					
+					<div class="row">
+						<label class="visible-xs-block">Date</label>
+						<div class="col-md-4">
+							<input class="form-control date" type="text" name="date" ng-model="date">
+						</div>
+						<label class="visible-xs-block">Days</label>
+						<div class="col-md-4">
+							<input class="form-control" type="number" name="days" ng-model="days">
+						</div>
+						<label class="visible-xs-block">Interest</label>
+						<div class="col-md-4">
+							<select class="form-control" name="lifestyle" ng-model="lifestyle">
+								<option value="s">Sightseeing</option>
+								<option value="l">Low Cost</option>
+								<option value="a">Action-Packed</option>
+								<option value="f">Food Hunter</option>
+								<option value="n">Nature Lover</option>
+								<option value="h">Historical/Cultural</option>
+							</select>
+						</div>
+					</div>
+				</form>			
+			</div>
+		</div>
+	</div>
+
+	<div class="who">
+		<div class="row">
+			<div class="col-md-8 col-md-offset-2">
+				<h2>
+					Travora builds your travel itinerary based on your interest and needs
+					<br>
+					<small>
+						Yes, we do understand the frustration of trip planning
+						<br>
+						We're going to make it a better experience!
+						<br>
+						Read more about our background story below
+					</small>
+				</h2>
+			</div>
+
+			<div class="col-md-2 col-md-offset-5 col-xs-10 col-xs-offset-1">
+				<a class="btn btn-lg story-btn" href="/about">OUR STORY</a>
+			</div>
+		</div>
+	</div>
+
+	<hr>
+	
+	<div class="what">
+		<h3>How It Works</h3>
+
+		<div class="row hidden-xs">
+			<div class="col-md-2 col-md-offset-3">
+				<i class="fa fa-hand-pointer-o fa-reverse fa-4x"></i>
+				<h4>
+					Pick Your Destination City &amp; Tell Us Your Interest
+				</h4>
+			</div>
+
+			<div class="col-md-2">
+				<i class="fa fa-laptop fa-reverse fa-4x"></i>
+				<h4>
+					We Use Our Algorithm to Compute the Best Itinerary Based on Available Inputs
+				</h4>
+			</div>
+
+			<div class="col-md-2">
+				<i class="fa fa-suitcase fa-reverse fa-4x"></i>
+				<h4>
+					Review Your Itinerary, Pack-Up &amp; Go!
+				</h4>
+			</div>
+		</div>
+
+		<div class="row visible-xs-block">
+			<div class="col-xs-10 col-xs-offset-1">
+				<i class="fa fa-hand-pointer-o fa-reverse fa-4x"></i>
+				<h4>
+					Pick Your Destination City &amp; Tell Us Your Interest
+				</h4>
+			</div>
+
+			<div class="col-xs-10 col-xs-offset-1">
+				<i class="fa fa-laptop fa-reverse fa-4x"></i>
+				<h4>
+					We Use Our Algorithm to Compute the Best Itinerary Based on Available Inputs
+				</h4>
+			</div>
+
+			<div class="col-xs-10 col-xs-offset-1">
+				<i class="fa fa-suitcase fa-reverse fa-4x"></i>
+				<h4>
+					Review Your Itinerary, Pack-Up &amp; Go!
+				</h4>
+			</div>
+		</div>
+	</div>
+
+	<div class="beta">
+		<h3>Follow Us</h3>
+
+		<h4>
+			Travora is currently in BETA
+			<br>
+			Subscribe to our newsletter while we strive to roll out new features!
+		</h4>
+
+		<br>
+
+		<form>
+			<div class="row">
+				<div class="col-md-6 col-md-offset-3 col-xs-10 col-xs-offset-1">
+					<div class="col-md-9">
+						<input class="form-control" type="text" placeholder="Your email e.g. you@awesome.com" ng-model="email">
+					</div>
+					<div class="col-md-3">
+						<a class="btn sub-btn" ng-click="subscribe()">SUBSCRIBE</a>
+					</div>
+				</div>
+			</div>
+			<h5>{{subscribeStatus}}</h5>
+		</form>
+
+		<br>
+
+		<div class="row">
+			<div class="col-md-4 col-md-offset-4">
+				<h4 style="text-align:left">
+					Upcoming features
+					<ul>
+						<li>More cities! (other than just New York City)</li>
+						<li>Pick hotels &amp; restaurants</li>
+						<li>Export itinerary to PDF or Google Calendar</li>
+					</ul>
+				</h4>
+			</div>
+		</div>
+
+	</div>
+</div>
+
+<script>
+	var selectedPlace;
+	var dateTimer = window.setInterval(function(){
+		if($('.date').length > 0){
+			$('.date').datepicker({
+				autoclose: true,
+				todayHightlight: true,
+				orientation: "bottom auto",
+				startDate: new Date()
+			});
+
+			$('.date').datepicker("setDate", new Date());
+
+			window.clearInterval(dateTimer)
+		}
+	}, 100)
+
+ 	var cities = new Bloodhound({
+ 		datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+ 		queryTokenizer: Bloodhound.tokenizers.whitespace,
+ 		prefetch: '/suggestion'
+ 	});
+
+ 	$('.typeahd').typeahead({
+ 		hint: true,
+ 		highlight: true,
+ 		limit: 5,
+ 		minLength: 1, 		
+ 	}, {
+		name: 'cities',
+		display: displayString,
+		source: cities,
+		templates:{
+			empty: '<div>No match found</div>',
+			suggestion: function(data){
+				return "<div class='sgst'>" + data.name + ",    <small>" + data.country + "</small></div>"
+			}
+		}
+	});
+
+	function displayString(suggestion){
+		return suggestion.name;
+	}
+
+	$('.typeahd').bind('typeahead:select', function(ev, suggestion) {
+		selectedPlace = suggestion;
+		console.log('Selection: ' , suggestion);
+	});
+</script>

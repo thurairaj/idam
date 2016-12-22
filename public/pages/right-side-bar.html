@@ -1,0 +1,20 @@
+<div>
+	<ul class="nav fixate" data-spy="affix" data-offset-top="65">
+		<li ng-repeat="i in getNumber(number()) track by $index">
+			<a href="#day{{$index + 1}}">
+				Day {{$index + 1}}	
+			</a>
+		</li>
+		<li>
+			<br>
+		</li>
+	</ul>	
+	<div class="btn-group" role="group">
+		<a class="btn btn-default" href="/list">
+			<i class="fa fa-list fa-inverse"></i>
+		</a>
+		<a class="btn btn-default" href="/map">
+			<i class="fa fa-map fa-inverse"></i>
+		</a>
+	</div>
+</div>

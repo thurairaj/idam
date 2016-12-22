@@ -1,0 +1,37 @@
+{
+  "name": "lets_go",
+  "version": "1.0.0",
+  "description": "Web app to organize trips",
+  "main": "server.js",
+  "scripts": {
+    "test": "node server.js",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thurairaj92/letsgo.git"
+  },
+  "keywords": [
+    "trip",
+    "planner"
+  ],
+  "author": "Thurai, Yaj",
+  "license": "",
+  "bugs": {
+    "url": "https://github.com/thurairaj92/letsgo/issues"
+  },
+  "homepage": "https://github.com/thurairaj92/letsgo#readme",
+  "dependencies": {
+    "async": "^2.0.1",
+    "body-parser": "^1.15.0",
+    "cors": "^2.7.1",
+    "express": "^4.13.4",
+    "client-sessions" : "^0.7.0",
+    "moment": "^2.14.1",
+    "mongodb": "^2.1.18",
+    "request": "^2.73.0",
+    "underscore": "^1.8.3",
+    "crypto" : "^0.0.3"
+
+  }
+}
