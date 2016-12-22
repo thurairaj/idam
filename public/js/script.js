@@ -1,4 +1,4 @@
-var app = angular.module('secretsanta', ['uiGmapgoogle-maps', 'ui.bootstrap', 'ngCookies']);
+var app = angular.module('idam', ['uiGmapgoogle-maps', 'ui.bootstrap', 'ngCookies']);
 
 app.config(function(uiGmapGoogleMapApiProvider) {
 	uiGmapGoogleMapApiProvider.configure({
@@ -194,7 +194,7 @@ app.controller('mainCtrl', ['$scope', '$http', 'uiGmapGoogleMapApi', '$cookies',
 		avgY = sumY / latlons.length;
 		avgZ = sumZ / latlons.length;
 		var centerLon = Math.atan2(avgY, avgX);
-		var centerLat = Math.atan2(avgZ, Math.sqrt(avgX**2 + avgY**2))
+		var centerLat = Math.atan2(avgZ, Math.sqrt(Math.pow(avgX,2) + Math.pow(avgY,2)));
 		
 		if ($scope.outputs.curCentMarker){
 			$scope.outputs.curCentMarker.setMap(null);
