@@ -100,6 +100,13 @@
 					</div>
 					<hr>
 				</div>
+				<div ng-show="outputs.searchPlaces.length <= 0">
+					<div class="place-container noselection" ng-click="zoomToPlace(place)">
+						<h5 class="place-title">0 Place Found</h5>
+						<span class="place-address">There is no places for the particular addresses and category. Try with wider category. Thanks</span>
+					</div>
+					<hr>
+				</div>
 				<!-- <div>
 					<div class="place-container noselection">
 						<span class="number-circle-container">

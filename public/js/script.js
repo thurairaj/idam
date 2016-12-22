@@ -83,7 +83,8 @@ app.controller('mainCtrl', ['$scope', '$http', 'uiGmapGoogleMapApi', '$cookies',
 		for(var i=0; i < $scope.inputs.address.length; i++){
 			address = $scope.inputs.address[i];
 			if(address != "" && !$scope.inputs.latlons[i]){
-				$scope.errorMessage.address[i] = "Please choose one of the prompted address"
+				$scope.errorMessage.address[i] = "Please choose one of the prompted address";
+				$scope.load.places = false;
 				return;
 			}
 		}
