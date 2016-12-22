@@ -238,14 +238,23 @@ app.controller('mainCtrl', ['$scope', '$http', 'uiGmapGoogleMapApi', '$cookies',
 	}
 
 	var placeAPIResponse = function(result, status){
-		$scope.outputs.searchPlaces = result.filter(function(x){
+		var radiusLimit = 2000;
+		$scope.outputs.searchPlaces = result.map(function(x){
 			x.distanceFromCenter = get_distance(x.geometry.location.toJSON(), $scope.outputs.curCentroid);
 			x.moreInfo = {
 				open : false,
 				requesting : false
 			}
-			return x.distanceFromCenter < 2000;
+			return x
 		});
+
+		if(result.length > 0){
+			radiusLimit *= 2;
+			while($scope.outputs.searchPlaces.length == 0){
+				$scope.outputs.searchPlaces = result.map(function(x){ return x.distanceFromCenter < radiusLimit});
+			}
+		}
+
 		$scope.isClosed.result = false;
 		$scope.isClosed.search = true;
 		$scope.load.places = false;
