@@ -36,7 +36,7 @@
 						<div class="input-group">
 							<span class="input-group-addon">{{key+1}}</span>
 							<input class="form-control" type='text' placeholder='Address' ng-model="inputs.address[key]" address-search-box>
-							<i class="fa fa-trash" aria-hidden="true" ng-hide="key == (inputs.address.length - 1)" ng-click="removeElement(key)"></i>
+							<i class="fa fa-trash" aria-hidden="true" ng-hide="key == (inputs.address.length - 1)" ng-click="removeAddress(key)"></i>
 						</div>
 						<p class="error" ng-show="!!errorMessage.address[key]">{{errorMessage.address[key]}}</p>
 					</div>

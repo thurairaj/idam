@@ -12,15 +12,20 @@ app.controller('mainCtrl', ['$scope', '$http', 'uiGmapGoogleMapApi', '$cookies',
 	$scope.inputs = {
 		address : [],
 		interest : "",
-		latlons : []
+		placeForAddress : []
+	}
+
+	$scope.settings = {
+		intro : !$cookies.get('intro'),
+		language : 'en',
 	}
 
     $scope.intro = !$cookies.get('intro');
     $cookies.put('intro',true);
 
 	$scope.map = { 
-		center: { latitude: 43.761539, longitude: -79.411079 }, 
-		zoom: 11,
+		center: { latitude: 0, longitude: 0 }, 
+		zoom: 14,
 		control : {},
 		options : {
 			mapTypeControl : false
@@ -28,6 +33,14 @@ app.controller('mainCtrl', ['$scope', '$http', 'uiGmapGoogleMapApi', '$cookies',
 		markers : []
 	};
 
+	navigator.geolocation.getCurrentPosition(function(pos){
+		var crd = pos.coords;
+		$scope.map.center = {
+			latitude : crd.latitude,
+			longitude : crd.longitude
+		}
+		$scope.$apply();
+	});
 
 	$scope.outputs = {
 		searchPlaces : [],
@@ -82,15 +95,15 @@ app.controller('mainCtrl', ['$scope', '$http', 'uiGmapGoogleMapApi', '$cookies',
 		var address;
 		for(var i=0; i < $scope.inputs.address.length; i++){
 			address = $scope.inputs.address[i];
-			if(address != "" && !$scope.inputs.latlons[i]){
+			if(address != "" && !$scope.inputs.placeForAddress[i]){
 				$scope.errorMessage.address[i] = "Please choose one of the prompted address";
 				$scope.load.places = false;
 				return;
 			}
 		}
 
-		var cleanLatLons = $scope.inputs.latlons.filter(function(value){
-			return !!value && !!value.lat && !!value.lon;
+		var cleanLatLons = $scope.inputs.placeForAddress.filter(function(value){
+			return !!value && !!value.location && !!value.location.lat && !!value.location.lng;
 		})
 		//check for at least a place
 		if(cleanLatLons.length < 1){
@@ -104,33 +117,31 @@ app.controller('mainCtrl', ['$scope', '$http', 'uiGmapGoogleMapApi', '$cookies',
 		}
 
 		//check are done : more checks are suppose to be perform before here
-		var centroid = get_centroid(cleanLatLons);
+		var centroid = getCentroid(cleanLatLons);
 		$scope.outputs.curCentroid = centroid;
-		startGetPlace(centroid);
+		getPlacesForMultipleAddress(centroid);
 	}
 
-	$scope.removeElement = function(key){
+	$scope.removeAddress = function(key){
 		key = parseInt(key, 10);
 		var map = $scope.map.control.getGMap()
 		var bounds = new google.maps.LatLngBounds();
 		var marker;
 
-		$scope.map.markers.map(function(x){
-		 	if(!!x){
-				x.setMap(null);
-		 	}
-		});
+		$scope.inputs.placeForAddress.map(function(x){
+			if(!!x && !!x.marker)
+				x.marker.setMap(null)
+		})
 
-		$scope.map.markers.splice(key, 1);
 		$scope.inputs.address.splice(key, 1);
-		$scope.inputs.latlons.splice(key, 1);
+		$scope.inputs.placeForAddress.splice(key, 1);
 
-		 $scope.map.markers.map(function(x, index){
-		 	if(!!x){
-		 		x.setLabel((index+1).toString());
-				x.setMap(map);
-		 		bounds.extend(x.getPosition());
-		 	}
+		$scope.inputs.placeForAddress.map(function(x, index){
+			if(!!x && !!x.marker){
+				x.marker.setMap(map);
+				x.marker.setLabel((index + 1).toString());
+				bounds.extend(x.marker.getPosition());
+			}
 		});
 
 		if ($scope.map.markers.length > 1) map.fitBounds(bounds);
@@ -177,14 +188,75 @@ app.controller('mainCtrl', ['$scope', '$http', 'uiGmapGoogleMapApi', '$cookies',
 
 	//TODO : onblur address check latlons is entered or not
 	//TODO : remove address
+	//
+	var getPlacesForMultipleAddress = function(centroid){
+		var request = {
+			location: new google.maps.LatLng(centroid.lat,centroid.lng),
+			rankBy: google.maps.places.RankBy.DISTANCE,
+			keyword: $scope.inputs.interest
+		};
+		var service = new google.maps.places.PlacesService($scope.map.control.getGMap());
+		service.nearbySearch(request, placeSearchApiResponse);
+	}
 
-	var get_centroid = function(latlons){
+	var placeSearchApiResponse = function(result, status){
+		var radiusLimit = 2000;
+		$scope.outputs.searchPlaces = result.map(function(x){
+			x.distanceFromCenter = getDistance(x.geometry.location.toJSON(), $scope.outputs.curCentroid);
+			x.moreInfo = {
+				open : false,
+				requesting : false
+			}
+			return x
+		});
+
+		if(result.length > 0){
+			radiusLimit *= 2;
+			while($scope.outputs.searchPlaces.length == 0){
+				$scope.outputs.searchPlaces = result.map(function(x){ return x.distanceFromCenter < radiusLimit});
+			}
+		}
+
+		$scope.isClosed.result = false;
+		$scope.isClosed.search = true;
+		$scope.load.places = false;
+		putPlaceMarkersOnMap();
+		$scope.$apply();
+		console.log(result, status);
+	}
+
+	var putPlaceMarkersOnMap = function(){
+		var limit = Math.min($scope.outputs.searchPlaces.length, 10);
+		var place;
+		var map = $scope.map.control.getGMap();
+		var bound = new google.maps.LatLngBounds();
+		
+		$scope.outputs.placeMarkers.map(function(x){if (!!x) x.setMap(null)});
+		for(var i = 0; i < limit; i++){
+			place = $scope.outputs.searchPlaces[i];
+			$scope.outputs.placeMarkers[i] = new google.maps.Marker({
+				map: map,
+				icon: new google.maps.MarkerImage("http://www.googlemapsmarkers.com/v1/"+(i+1).toString()+"/0093ff/000000/05497b"),
+				title: place.name,
+				position: place.geometry.location
+			});
+			bound.extend(place.geometry.location)
+		}
+
+		$scope.inputs.placeForAddress.map(function(x){
+			bound.extend(x.marker.getPosition());
+		});
+
+		map.fitBounds(bound);
+	}
+
+	var getCentroid = function(latlons){
 		var avgX = sumX = avgY = sumY = avgZ = sumZ = 0;
 		var latlon, lat, lon;
 		for(var i=0; i < latlons.length; i++){
-			latlon = latlons[i];
+			latlon = latlons[i].location;
 			lat = latlon.lat.toRadians();
-			lon = latlon.lon.toRadians();
+			lon = latlon.lng.toRadians();
 
 			sumX += Math.cos(lat) * Math.cos(lon);
 			sumY += Math.cos(lat) * Math.sin(lon);
@@ -213,7 +285,7 @@ app.controller('mainCtrl', ['$scope', '$http', 'uiGmapGoogleMapApi', '$cookies',
 
 		$scope.outputs.curCentMarker.addListener('dragend', function() {
 			$scope.outputs.curCentroid = {lat : $scope.outputs.curCentMarker.getPosition().lat(), lng : $scope.outputs.curCentMarker.getPosition().lng()}
-		    startGetPlace($scope.outputs.curCentroid);
+		    getPlacesForMultipleAddress($scope.outputs.curCentroid);
 		});
 
 		return {
@@ -222,7 +294,7 @@ app.controller('mainCtrl', ['$scope', '$http', 'uiGmapGoogleMapApi', '$cookies',
 		}
 	}
 
-	var get_distance = function(pointOne, pointTwo){
+	var getDistance = function(pointOne, pointTwo){
 		var R = 6371000;
 		var latPointOne  = pointOne.lat.toRadians();
 		var latPointTwo = pointTwo.lat.toRadians();
@@ -238,70 +310,6 @@ app.controller('mainCtrl', ['$scope', '$http', 'uiGmapGoogleMapApi', '$cookies',
 		return d
 	}
 
-	var placeAPIResponse = function(result, status){
-		var radiusLimit = 2000;
-		$scope.outputs.searchPlaces = result.map(function(x){
-			x.distanceFromCenter = get_distance(x.geometry.location.toJSON(), $scope.outputs.curCentroid);
-			x.moreInfo = {
-				open : false,
-				requesting : false
-			}
-			return x
-		});
-
-		if(result.length > 0){
-			radiusLimit *= 2;
-			while($scope.outputs.searchPlaces.length == 0){
-				$scope.outputs.searchPlaces = result.map(function(x){ return x.distanceFromCenter < radiusLimit});
-			}
-		}
-
-		$scope.isClosed.result = false;
-		$scope.isClosed.search = true;
-		$scope.load.places = false;
-		applyPlaceMarker();
-		$scope.$apply();
-		console.log(result, status);
-	}
-
-	var applyPlaceMarker = function(){
-		var limit = Math.min($scope.outputs.searchPlaces.length, 10);
-		var place;
-		var map = $scope.map.control.getGMap();
-		var bound = new google.maps.LatLngBounds();
-		
-		$scope.outputs.placeMarkers.map(function(x){if (!!x) x.setMap(null)});
-		for(var i = 0; i < limit; i++){
-			place = $scope.outputs.searchPlaces[i];
-			$scope.outputs.placeMarkers[i] = new google.maps.Marker({
-				map: map,
-				icon: new google.maps.MarkerImage("http://www.googlemapsmarkers.com/v1/"+(i+1).toString()+"/0093ff/000000/05497b"),
-				title: place.name,
-				position: place.geometry.location
-			});
-			bound.extend(place.geometry.location)
-		}
-
-		for (var key = 0; key < $scope.map.markers.length; key++) {
-			if(!!$scope.map.markers[key]){
-				bound.extend($scope.map.markers[key].getPosition());
-			}
-		}
-
-
-		map.fitBounds(bound);
-	}
-
-	var startGetPlace = function(centroid){
-		var request = {
-			location: new google.maps.LatLng(centroid.lat,centroid.lng),
-			rankBy: google.maps.places.RankBy.DISTANCE,
-			keyword: $scope.inputs.interest
-		};
-		var service = new google.maps.places.PlacesService($scope.map.control.getGMap());
-		service.nearbySearch(request, placeAPIResponse);
-	}
-
 	uiGmapGoogleMapApi.then(function(maps) {
 		$scope.$watchCollection('inputs.address', function(list){
 			//filter name with empty strings
@@ -311,6 +319,8 @@ app.controller('mainCtrl', ['$scope', '$http', 'uiGmapGoogleMapApi', '$cookies',
 		})
 	});
 }])
+
+
 
 app.directive('addressSearchBox', function(){
 	return{
@@ -328,21 +338,14 @@ app.directive('addressSearchBox', function(){
 			sb.addListener('places_changed', function() {
 				var key = scope.key
 				var places = sb.getPlaces();
-				var customLatLon = {
-					lat : "",
-					lon : ""
-				}
+				var bounds = new google.maps.LatLngBounds();
+				var curPlaceObject = scope.$parent.inputs.placeForAddress[key];
 
 				if(places.length < 1){
 					return;
 				}
 
-				if(scope.$parent.map.markers[key]){
-					scope.$parent.map.markers[key].setMap(null);
-				}
-				
 				var place = places[0];
-				var bounds = new google.maps.LatLngBounds();
 				var icon = {
 					url: place.icon,
 					size: new google.maps.Size(71, 71),
@@ -350,29 +353,41 @@ app.directive('addressSearchBox', function(){
 					anchor: new google.maps.Point(17, 34),
 					scaledSize: new google.maps.Size(25, 25)
 				};
+				
 
 				if (!place.geometry) {
 					console.log("Returned place contains no geometry");
 					return;
 				}
 
-				customLatLon.lat = place.geometry.location.lat()
-				customLatLon.lon = place.geometry.location.lng();
-				scope.$parent.inputs.latlons[key] = customLatLon; 
-				scope.$parent.inputs.address[key] = place.formatted_address
-				scope.$parent.errorMessage.address[key] = null;
-				scope.$parent.map.markers[key] = new google.maps.Marker({
+				if(!!curPlaceObject){
+					if(!!curPlaceObject.marker){
+						curPlaceObject.marker.setMap(null);
+					}
+				}else{
+					curPlaceObject = {}
+				}
+				
+				curPlaceObject.location = {
+					lat : place.geometry.location.lat(),
+					lng : place.geometry.location.lng()
+				};
+				curPlaceObject.marker = new google.maps.Marker({
 					map: map,
 					label: (key+1).toString(),
 					title: place.name,
 					position: place.geometry.location
 				});
 
-				for (var key in scope.$parent.map.markers) {
-					if (scope.$parent.map.markers.hasOwnProperty(key)) {
-						bounds.extend(scope.$parent.map.markers[key].getPosition());
+				scope.$parent.inputs.placeForAddress[key] = curPlaceObject;
+				scope.$parent.inputs.address[key] = place.formatted_address;
+				scope.$parent.errorMessage.address[key] = null;
+
+				scope.$parent.inputs.placeForAddress.map(function(x, index){
+					if(!!x && !!x.marker){
+						bounds.extend(x.marker.getPosition());
 					}
-				}
+				});
 				map.fitBounds(bounds);
 			})
 		}
